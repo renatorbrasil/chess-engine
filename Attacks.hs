@@ -1,4 +1,4 @@
-module LeaperAttacks
+module Attacks
   ( generatePawnAttacks
   , generateKnightAttacks
   , generateKingAttacks
@@ -52,59 +52,64 @@ generateKingAttacks square =
       n  = (shiftR base 8)
   in ne .|. e .|. se .|. s .|. sw .|. w .|. nw .|. n
 
-generateBishopAttacks :: Square -> Bitboard
-generateBishopAttacks square = 
+generateBishopAttacks :: Square -> Bitboard -> Bitboard
+generateBishopAttacks square blockers = 
   let base = buildBoard [square]
       pMult = 7
       nMult = 9
-      ne = buildRays base shiftR pMult notFilesE
-      se = buildRays base shiftL nMult notFilesE
-      nw = buildRays base shiftR nMult notFilesW
-      sw = buildRays base shiftL pMult notFilesW
+      ne = buildRaysBlocked base shiftR pMult notFilesE blockers
+      se = buildRaysBlocked base shiftL nMult notFilesE blockers
+      nw = buildRaysBlocked base shiftR nMult notFilesW blockers
+      sw = buildRaysBlocked base shiftL pMult notFilesW blockers
   in ne .|. se .|. nw .|. sw
 
-generateRookAttacks :: Square -> Bitboard
-generateRookAttacks square =
+generateRookAttacks :: Square -> Bitboard -> Bitboard
+generateRookAttacks square blockers =
   let base = buildBoard [square]
       hMult = 1
       vMult = 8
-      n = buildRays base shiftR vMult (repeat (maxBound :: Bitboard))
-      s = buildRays base shiftL vMult (repeat (maxBound :: Bitboard))
-      w = buildRays base shiftR hMult notFilesW
-      e = buildRays base shiftL hMult notFilesE
+      n = buildRaysBlocked base shiftR vMult (repeat (maxBound :: Bitboard)) blockers
+      s = buildRaysBlocked base shiftL vMult (repeat (maxBound :: Bitboard)) blockers
+      w = buildRaysBlocked base shiftR hMult notFilesW blockers
+      e = buildRaysBlocked base shiftL hMult notFilesE blockers
    in n .|. s .|. w .|. e
 
-
-generateQueenAttacks :: Square -> Bitboard
-generateQueenAttacks square =
-  generateRookAttacks square .|. generateBishopAttacks square
+generateQueenAttacks :: Square -> Bitboard -> Bitboard
+generateQueenAttacks square blockers =
+  generateRookAttacks square blockers .|. generateBishopAttacks square blockers
 
 generateBishopRelevantSquares :: Square -> Bitboard
 generateBishopRelevantSquares square = 
-  generateBishopAttacks square .&. notBorder
+  generateBishopAttacks square emptyBoard .&. notBorder
 
 generateRookRelevantSquares :: Square -> Bitboard
 generateRookRelevantSquares square =
   let base = buildBoard [square]
       hMult = 1
       vMult = 8
-      n = buildRays base shiftR vMult (repeat (maxBound :: Bitboard)) .&. not1Row .&. not8Row
-      s = buildRays base shiftL vMult (repeat (maxBound :: Bitboard)) .&. not1Row .&. not8Row
-      w = buildRays base shiftR hMult notFilesW .&. notAFile .&. notHFile
-      e = buildRays base shiftL hMult notFilesE .&. notAFile .&. notHFile
-   in (n .|. s .|. w .|. e)
+      n = buildRaysBlocked base shiftR vMult (repeat (maxBound :: Bitboard)) emptyBoard 
+        .&. not1Row .&. not8Row
+      s = buildRaysBlocked base shiftL vMult (repeat (maxBound :: Bitboard)) emptyBoard 
+        .&. not1Row .&. not8Row
+      w = buildRaysBlocked base shiftR hMult notFilesW emptyBoard .&. notAFile .&. notHFile
+      e = buildRaysBlocked base shiftL hMult notFilesE emptyBoard .&. notAFile .&. notHFile
+   in n .|. s .|. w .|. e
+
+----------------------------------------------------------------------------------------------
+
+buildRaysBlocked base shift mult notFiles blocks = 
+  iter base shift mult notFiles blocks 1 emptyBoard where
+    iter base shift mult notFiles blocks index acc =
+      let nextSquare = shift base (mult * index) .&. takeAnd index notFiles
+          hasNext = not $ isBoardEmpty nextSquare
+          isNotBlocked = isBoardEmpty (nextSquare .&. blocks)
+          newAcc = nextSquare .|. acc
+      in if (hasNext && isNotBlocked)
+            then iter base shift mult notFiles blocks (index + 1) newAcc
+            else newAcc
 
 takeAnd :: Int -> [Bitboard] -> Bitboard
-takeAnd index notFiles = foldr1 (.&.) $ take (index + 1) notFiles
-
-buildRays :: Bitboard 
-          -> (Bitboard -> Int -> Bitboard) 
-          -> Int 
-          -> [Bitboard] 
-          -> Bitboard
-buildRays base shift mult notFiles = foldr1 (.|.) $ 
-  map (\index ->  (shift base (mult * (index + 1))) 
-              .&. (takeAnd index notFiles)) [0..6]
+takeAnd index notFiles = foldr1 (.&.) $ take index notFiles
 
 notFilesE, notFilesW :: [Bitboard]
 notFilesE = [notAFile, notBFile, notCFile, notDFile, notEFile, notFFile, notGFile, notHFile]

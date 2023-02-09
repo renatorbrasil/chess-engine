@@ -5,6 +5,8 @@ module Bitboard
   , getSquareValue
   , getSquares
   , toBits
+  , isBoardEmpty
+  , countBits
   ) where
 
 import Data.Word
@@ -33,8 +35,14 @@ getSquares bb = map snd
               $ filter fst 
               $ zip (toBits bb) [minBound ..]
 
+isBoardEmpty :: Bitboard -> Bool
+isBoardEmpty bb = bb == 0
+
 toBits :: Bitboard -> [Bool]
 toBits bb = zipWith getSquareValue (repeat bb) [minBound ..]
+
+countBits :: Bitboard -> Int
+countBits = popCount
 
 getSquareValue :: Bitboard -> Square -> Bool
 getSquareValue bitboard square = testBit bitboard (fromEnum square)

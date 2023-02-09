@@ -3,12 +3,12 @@
   , module PresetBitboards
   , module PrintBoard
   , module Pieces
-  , module LeaperAttacks
+  , module Attacks
   ) where
 
 import Bitboard
 import PresetBitboards
 import PrintBoard
 import Pieces
-import LeaperAttacks
+import Attacks
 
