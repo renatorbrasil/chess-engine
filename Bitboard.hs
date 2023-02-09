@@ -7,6 +7,8 @@ module Bitboard
   , toBits
   , isBoardEmpty
   , countBits
+  , getFirstSquareIndex
+  , getFirstSquare
   ) where
 
 import Data.Word
@@ -25,15 +27,14 @@ data Square = A8 | B8 | C8 | D8 | E8 | F8 | G8 | H8
              deriving (Eq, Ord, Enum, Bounded, Show) 
 
 buildBoard :: [Square] -> Bitboard
-buildBoard [] = 0
-buildBoard (x:xs) = powerOf2 (fromEnum x) .|. buildBoard xs
-  where powerOf2 0 = 1
-        powerOf2 x = 2 * (powerOf2 (x - 1))
+buildBoard []     = 0
+buildBoard (x:xs) = bit (fromEnum x) .|. buildBoard xs
 
 getSquares :: Bitboard -> [Square]
 getSquares bb = map snd 
-              $ filter fst 
-              $ zip (toBits bb) [minBound ..]
+              . filter fst 
+              . zip (toBits bb) 
+              $ [minBound ..]
 
 isBoardEmpty :: Bitboard -> Bool
 isBoardEmpty bb = bb == 0
@@ -44,5 +45,11 @@ toBits bb = zipWith getSquareValue (repeat bb) [minBound ..]
 countBits :: Bitboard -> Int
 countBits = popCount
 
+getFirstSquareIndex :: Bitboard -> Int
+getFirstSquareIndex = countTrailingZeros
+
+getFirstSquare :: Bitboard -> Square
+getFirstSquare = toEnum . getFirstSquareIndex
+
 getSquareValue :: Bitboard -> Square -> Bool
-getSquareValue bitboard square = testBit bitboard (fromEnum square)
+getSquareValue bb sq = testBit bb (fromEnum sq)

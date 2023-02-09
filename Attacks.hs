@@ -68,8 +68,8 @@ generateRookAttacks square blockers =
   let base = buildBoard [square]
       hMult = 1
       vMult = 8
-      n = buildRaysBlocked base shiftR vMult (repeat (maxBound :: Bitboard)) blockers
-      s = buildRaysBlocked base shiftL vMult (repeat (maxBound :: Bitboard)) blockers
+      n = buildRaysBlocked base shiftR vMult (repeat fullBoard) blockers
+      s = buildRaysBlocked base shiftL vMult (repeat fullBoard) blockers
       w = buildRaysBlocked base shiftR hMult notFilesW blockers
       e = buildRaysBlocked base shiftL hMult notFilesE blockers
    in n .|. s .|. w .|. e
@@ -87,10 +87,8 @@ generateRookRelevantSquares square =
   let base = buildBoard [square]
       hMult = 1
       vMult = 8
-      n = buildRaysBlocked base shiftR vMult (repeat (maxBound :: Bitboard)) emptyBoard 
-        .&. not1Row .&. not8Row
-      s = buildRaysBlocked base shiftL vMult (repeat (maxBound :: Bitboard)) emptyBoard 
-        .&. not1Row .&. not8Row
+      n = buildRaysBlocked base shiftR vMult (repeat fullBoard) emptyBoard .&. not1Row .&. not8Row
+      s = buildRaysBlocked base shiftL vMult (repeat fullBoard) emptyBoard .&. not1Row .&. not8Row
       w = buildRaysBlocked base shiftR hMult notFilesW emptyBoard .&. notAFile .&. notHFile
       e = buildRaysBlocked base shiftL hMult notFilesE emptyBoard .&. notAFile .&. notHFile
    in n .|. s .|. w .|. e
@@ -98,14 +96,14 @@ generateRookRelevantSquares square =
 ----------------------------------------------------------------------------------------------
 
 buildRaysBlocked base shift mult notFiles blocks = 
-  iter base shift mult notFiles blocks 1 emptyBoard where
-    iter base shift mult notFiles blocks index acc =
-      let nextSquare = shift base (mult * index) .&. takeAnd index notFiles
-          hasNext = not $ isBoardEmpty nextSquare
-          isNotBlocked = isBoardEmpty (nextSquare .&. blocks)
-          newAcc = nextSquare .|. acc
+  iter 1 emptyBoard where 
+    iter index acc =
+      let currentSquare = shift base (mult * index) .&. takeAnd index notFiles
+          hasNext = not $ isBoardEmpty currentSquare
+          isNotBlocked = isBoardEmpty (currentSquare .&. blocks)
+          newAcc = currentSquare .|. acc
       in if (hasNext && isNotBlocked)
-            then iter base shift mult notFiles blocks (index + 1) newAcc
+            then iter (index + 1) newAcc
             else newAcc
 
 takeAnd :: Int -> [Bitboard] -> Bitboard
