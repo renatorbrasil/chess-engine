@@ -38,9 +38,15 @@ getSquares bb = map snd
 
 isBoardEmpty :: Bitboard -> Bool
 isBoardEmpty bb = bb == 0
-
+  
+{-
+ - Not sure if efficient.
+ -}
 toBits :: Bitboard -> [Bool]
-toBits bb = zipWith getSquareValue (repeat bb) [minBound ..]
+toBits bb = map (testBit bb) [0..63]
+
+getSquareValue :: Bitboard -> Square -> Bool
+getSquareValue bb sq = testBit bb (fromEnum sq)
 
 countBits :: Bitboard -> Int
 countBits = popCount
@@ -51,5 +57,3 @@ getFirstSquareIndex = countTrailingZeros
 getFirstSquare :: Bitboard -> Square
 getFirstSquare = toEnum . getFirstSquareIndex
 
-getSquareValue :: Bitboard -> Square -> Bool
-getSquareValue bb sq = testBit bb (fromEnum sq)

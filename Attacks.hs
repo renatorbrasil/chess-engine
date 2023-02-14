@@ -1,26 +1,17 @@
-module Attacks
-  ( generatePawnAttacks
-  , generateKnightAttacks
-  , generateKingAttacks
-  , generateRookAttacks
-  , generateBishopAttacks
-  , generateQueenAttacks
-  , generateBishopRelevantSquares
-  , generateRookRelevantSquares
-  ) where
+module Attacks where
 
 import Bitboard
 import PresetBitboards
 import Pieces
 import Data.Bits
 
-generatePawnAttacks :: Square -> Side -> Bitboard
-generatePawnAttacks square White =
+generatePawnAttacks :: Side -> Square -> Bitboard
+generatePawnAttacks White square =
   let base  = buildBoard [square]
       left  = (shiftR base 9) .&. notHFile
       right = (shiftR base 7) .&. notAFile
   in left .|. right
-generatePawnAttacks square Black =
+generatePawnAttacks Black square =
   let base  = buildBoard [square]
       left  = (shiftL base 9) .&. notAFile
       right = (shiftL base 7) .&. notHFile
@@ -32,8 +23,8 @@ generateKnightAttacks square =
       nwh = (shiftR base 17) .&. notHFile
       neh = (shiftR base 15) .&. notAFile
       nwl = (shiftR base 10) .&. notGFile .&. notHFile
-      nel = (shiftR base 6) .&. notAFile .&. notBFile
-      swh = (shiftL base 6) .&. notGFile .&. notHFile
+      nel = (shiftR base 6)  .&. notAFile .&. notBFile
+      swh = (shiftL base 6)  .&. notGFile .&. notHFile
       seh = (shiftL base 10) .&. notAFile .&. notBFile
       swl = (shiftL base 15) .&. notHFile
       sel = (shiftL base 17) .&. notAFile
@@ -57,10 +48,10 @@ generateBishopAttacks square blockers =
   let base = buildBoard [square]
       pMult = 7
       nMult = 9
-      ne = buildRaysBlocked base shiftR pMult notFilesE blockers
-      se = buildRaysBlocked base shiftL nMult notFilesE blockers
-      nw = buildRaysBlocked base shiftR nMult notFilesW blockers
-      sw = buildRaysBlocked base shiftL pMult notFilesW blockers
+      ne = buildRaysBlocked base shiftR pMult notFilesL blockers
+      se = buildRaysBlocked base shiftL nMult notFilesL blockers
+      nw = buildRaysBlocked base shiftR nMult notFilesR blockers
+      sw = buildRaysBlocked base shiftL pMult notFilesR blockers
   in ne .|. se .|. nw .|. sw
 
 generateRookAttacks :: Square -> Bitboard -> Bitboard
@@ -70,8 +61,8 @@ generateRookAttacks square blockers =
       vMult = 8
       n = buildRaysBlocked base shiftR vMult (repeat fullBoard) blockers
       s = buildRaysBlocked base shiftL vMult (repeat fullBoard) blockers
-      w = buildRaysBlocked base shiftR hMult notFilesW blockers
-      e = buildRaysBlocked base shiftL hMult notFilesE blockers
+      w = buildRaysBlocked base shiftR hMult notFilesR          blockers
+      e = buildRaysBlocked base shiftL hMult notFilesL          blockers
    in n .|. s .|. w .|. e
 
 generateQueenAttacks :: Square -> Bitboard -> Bitboard
@@ -87,10 +78,10 @@ generateRookRelevantSquares square =
   let base = buildBoard [square]
       hMult = 1
       vMult = 8
-      n = buildRaysBlocked base shiftR vMult (repeat fullBoard) emptyBoard .&. not1Row .&. not8Row
-      s = buildRaysBlocked base shiftL vMult (repeat fullBoard) emptyBoard .&. not1Row .&. not8Row
-      w = buildRaysBlocked base shiftR hMult notFilesW emptyBoard .&. notAFile .&. notHFile
-      e = buildRaysBlocked base shiftL hMult notFilesE emptyBoard .&. notAFile .&. notHFile
+      n = buildRaysBlocked base shiftR vMult (repeat fullBoard) emptyBoard .&. not1Row  .&. not8Row
+      s = buildRaysBlocked base shiftL vMult (repeat fullBoard) emptyBoard .&. not1Row  .&. not8Row
+      w = buildRaysBlocked base shiftR hMult notFilesR          emptyBoard .&. notAFile .&. notHFile
+      e = buildRaysBlocked base shiftL hMult notFilesL          emptyBoard .&. notAFile .&. notHFile
    in n .|. s .|. w .|. e
 
 ----------------------------------------------------------------------------------------------
@@ -99,9 +90,9 @@ buildRaysBlocked base shift mult notFiles blocks =
   iter 1 emptyBoard where 
     iter index acc =
       let currentSquare = shift base (mult * index) .&. takeAnd index notFiles
-          hasNext = not $ isBoardEmpty currentSquare
-          isNotBlocked = isBoardEmpty (currentSquare .&. blocks)
-          newAcc = currentSquare .|. acc
+          hasNext       = not $ isBoardEmpty currentSquare
+          isNotBlocked  = isBoardEmpty (currentSquare .&. blocks)
+          newAcc        = currentSquare .|. acc
       in if (hasNext && isNotBlocked)
             then iter (index + 1) newAcc
             else newAcc
@@ -109,6 +100,3 @@ buildRaysBlocked base shift mult notFiles blocks =
 takeAnd :: Int -> [Bitboard] -> Bitboard
 takeAnd index notFiles = foldr1 (.&.) $ take index notFiles
 
-notFilesE, notFilesW :: [Bitboard]
-notFilesE = [notAFile, notBFile, notCFile, notDFile, notEFile, notFFile, notGFile, notHFile]
-notFilesW = [notHFile, notGFile, notFFile, notEFile, notDFile, notCFile, notBFile, notAFile]

@@ -18,3 +18,7 @@ not1Row = 72057594037927935      :: Bitboard
 not8Row = 18446744073709551360   :: Bitboard
 
 notBorder = 35604928818740736    :: Bitboard
+
+notFilesL, notFilesR :: [Bitboard]
+notFilesL = [notAFile, notBFile, notCFile, notDFile, notEFile, notFFile, notGFile, notHFile]
+notFilesR = [notHFile, notGFile, notFFile, notEFile, notDFile, notCFile, notBFile, notAFile]
