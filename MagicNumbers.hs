@@ -2,8 +2,11 @@ module MagicNumbers where
 
 import Random
 import Bitboard
+import Occupancy
 import Data.Word
 import Data.Bits
+import Attacks
+import PreAttacks
 
 getCandidate :: Word32 -> Word64
 getCandidate seed =
@@ -15,4 +18,12 @@ getCandidate seed =
       n3 = getRandomWord64 s3
    in n1 .&. n2 .&. n3
 
--- findMagicNumber :: Square -> Int -> Bitboard
+findBishopMagicNumber :: Square -> Bitboard
+findBishopMagicNumber square =
+  let attackMask = bishopRelevantSquares !! fromEnum square
+      relevantBits = countBits attackMask
+      occupancyIndexes = shiftL 1 relevantBits
+      occupancies = map (occupancy attackMask) [0..occupancyIndexes]
+      attacks = map (generateBishopAttacks square) occupancies 
+   in 0
+

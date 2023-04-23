@@ -20,3 +20,8 @@ bishopRelevantBits, rookRelevantBits :: [Int]
 bishopRelevantBits = mapBoard (countBits . generateBishopRelevantSquares)
 rookRelevantBits   = mapBoard (countBits . generateRookRelevantSquares)
 
+bishopRelevantSquares :: [Bitboard]
+bishopRelevantSquares = mapBoard generateBishopRelevantSquares
+
+rookRelevantSquares :: [Bitboard]
+rookRelevantSquares = mapBoard generateRookRelevantSquares
